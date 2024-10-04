@@ -1,0 +1,16 @@
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:170:9:IKS01A3_MOTION_SENSOR_Init	25
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:760:9:IKS01A3_MOTION_SENSOR_DeInit	3
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:786:9:IKS01A3_MOTION_SENSOR_GetCapabilities	3
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:812:9:IKS01A3_MOTION_SENSOR_ReadID	3
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:841:9:IKS01A3_MOTION_SENSOR_Enable	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:880:9:IKS01A3_MOTION_SENSOR_Disable	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:920:9:IKS01A3_MOTION_SENSOR_GetAxes	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:960:9:IKS01A3_MOTION_SENSOR_GetAxesRaw	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:1000:9:IKS01A3_MOTION_SENSOR_GetSensitivity	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:1041:9:IKS01A3_MOTION_SENSOR_GetOutputDataRate	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:1081:9:IKS01A3_MOTION_SENSOR_GetFullScale	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:1122:9:IKS01A3_MOTION_SENSOR_SetOutputDataRate	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:1162:9:IKS01A3_MOTION_SENSOR_SetFullScale	4
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:1206:16:LSM6DSO_0_Probe	14
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:1288:16:LIS2DW12_0_Probe	12
+../Drivers/BSP/IKS01A3/iks01a3_motion_sensors.c:1361:16:LIS2MDL_0_Probe	12
