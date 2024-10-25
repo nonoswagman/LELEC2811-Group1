@@ -1,0 +1,13 @@
+.SUBCKT photoresistor VP VM
+
+.PARAM R_dark = 5Meg
+.PARAM R_10_lux = 100k
+.PARAM gamma = 0.8
+.PARAM K = R_10_lux/pwr(10,-gamma)
+
+.PARAM R_var = K*pwr(LUX,-gamma)
+
+Rphoto	VP VM	{R_var}
+Rdark	VP VM	{R_dark}
+
+.ENDS photoresistor
