@@ -1,9 +1,0 @@
-* C:\Users\loict\Nextcloud\Portable UCL\Master\LELEC2811 Sensors\Github\P2 - LTSpice hands-on-20241025\Shematic1.asc
-XU1 N001 VOUT photoresistor
-VVDD N001 0 5
-R1 VOUT 0 100k
-.lib ./photoresistor.lib
-.op
-.step dec param LUX 1e-3 1e3 10
-.backanno
-.end
