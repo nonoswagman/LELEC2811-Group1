@@ -1,6 +1,6 @@
 LTspice 24.0.12 for Windows
 Circuit: * C:\Users\loict\Nextcloud\Portable UCL\Master\LELEC2811 Sensors\Github\MP3\spice\charge_amplifier.asc
-Start Time: Fri Nov 15 15:50:44 2024
+Start Time: Tue Nov 19 17:51:44 2024
 solver = Normal
 Maximum thread count: 12
 tnom = 27
@@ -63,5 +63,5 @@ i1: Removing PWL point (9.375,1.348e-09)
 i1: Removing PWL point (9.625,-1.348e-09)
 i1: Removing PWL point (9.875,1.348e-09)
 Direct Newton iteration for .op point succeeded.
-Total elapsed time: 0.229 seconds.
+Total elapsed time: 0.186 seconds.
 
