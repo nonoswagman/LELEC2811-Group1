@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from numpy.polynomial.polynomial import Polynomial
@@ -73,6 +74,7 @@ def callibration(data_split, Jup):
 ##############################
 # Classification
 ##############################
+# Classifier: trouver à quelle type de boisson BoisonAClassifier est la plus proche.
 
 # Dataset connu: Jupiler , Taras Boulba , Maes Radler , Leffe Blonde , Grimbergen Triple , Rochefort 10
 data_ref = np.loadtxt("datas/dataRef.log")
@@ -94,7 +96,6 @@ BoisonsAClassifier = callibration(BoisonsAClassifier, Jup)
 #print("Callibration :",BoisonsAClassifier)
 
 
-# Classifier: trouver à quelle type de boisson BoisonAClassifier est la plus proche.
 def fit_polynomial(boissons, degree=3):
     """
     Ajuste un polynôme à chaque série de données ppm.
@@ -107,12 +108,31 @@ def fit_polynomial(boissons, degree=3):
             X.append(poly.coef)
     return np.array(X)
 
+def plot_polynomial(poly, ax, label=None):
+    """
+    Trace un polynôme sur un graphique.
+    """
+    x = np.linspace(0, 100, 100)
+    y = poly(x)
+    ax.plot(x, y, label=label)
+
 # Récupération des coéficients des courbes de ppm des boissons connues
 degree = 4  # Degré du polynôme
 X_train = fit_polynomial(data_ref, degree=degree)
 
 # Générer les étiquettes correspondantes, chaque boisson a un identifiant unique
 y_train = reponses
+
+# Affichage des courbes de ppm des boissons connues
+fig, ax = plt.subplots()
+for i, poly in enumerate(X_train):
+    plot_polynomial(Polynomial(poly), ax, label=reponses[i])
+ax.set_xlabel("Temps")
+ax.set_ylabel("PPM")
+ax.legend()
+plt.title("Courbes de ppm des boissons connues")
+plt.show()
+
 
 # Mise à l'échelle pour éviter des biais liés aux différentes échelles des coefficients
 scaler = StandardScaler()
@@ -140,3 +160,13 @@ predictions[uncertain_predictions] = -1  # -1 signifie une prédiction incertain
 print("Résultats de la classification :")
 for i, prediction in enumerate(predictions):
     print(f"Boisson {i + 1} : {prediction}")
+
+# Affichage des courbes de ppm des boissons à classifier
+fig, ax = plt.subplots()
+for i, poly in enumerate(X_test):
+    plot_polynomial(Polynomial(poly), ax, label=f"Boisson {predictions[i]}")
+ax.set_xlabel("Temps")
+ax.set_ylabel("PPM")
+ax.legend()
+plt.title("Courbes de ppm des boissons à classifier")
+plt.show()
