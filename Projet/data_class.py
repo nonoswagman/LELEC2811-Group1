@@ -6,6 +6,7 @@ from numpy.polynomial.polynomial import Polynomial
 
 # Séparateur des données
 motSep = 0
+lenght = 20
 
 ###############
 # Fonctions
@@ -26,6 +27,16 @@ def sep(data, motSep):
                 temp = []
     if len(temp)!= 0:
         toret.append(temp)
+    return toret
+
+# Supprime les datas qui ont une longuer inférieure à length
+def delDat(data, length):
+    """ Supprime les datas qui ont une longuer inférieure à length
+    """
+    toret = []
+    for tension in data:
+        if len(tension) > length:
+            toret.append(tension)
     return toret
 
 # Supprime les premiers éléments de chaque mesures
@@ -80,6 +91,7 @@ def callibration(data_split, Jup):
 data_ref = np.loadtxt("datas/dataRef.log")
 reponses = ["Jupiler", "Taras Boulba", "Maes Radler", "Leffe Blonde", "Grimbergen Triple", "Rochefort 10", "Eau","Vadka"]
 data_ref = sep(data_ref, motSep)
+data_ref = delDat(data_ref, lenght)
 data_ref = suppr(data_ref)
 data_ref = ppm(data_ref)
 Jup = data_ref[0]
@@ -89,6 +101,7 @@ data_ref = callibration(data_ref, Jup)
 # Boissons à classifier:
 BoisonsAClassifier = np.loadtxt("datas/data3.log")
 BoisonsAClassifier = sep(BoisonsAClassifier, motSep)
+BoisonsAClassifier = delDat(BoisonsAClassifier, lenght)
 BoisonsAClassifier = suppr(BoisonsAClassifier)
 BoisonsAClassifier = ppm(BoisonsAClassifier)
 Jup = BoisonsAClassifier[0]
