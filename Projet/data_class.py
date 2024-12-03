@@ -5,8 +5,8 @@ from sklearn.preprocessing import StandardScaler
 from numpy.polynomial.polynomial import Polynomial
 
 # Séparateur des données
-motSep = 0
-lenght = 20
+motSep = 0.000000
+lenght = 0
 
 ###############
 # Fonctions
@@ -39,24 +39,25 @@ def delDat(data, length):
             toret.append(tension)
     return toret
 
-# Supprime les premiers éléments de chaque mesures
+# Supprime les premiers éléments de chaque mesures et les derniers éléments de chaque mesures
 def suppr(data_split):
-    for i in range(len(data_split)):
-        distSuppr = round(1*len(data_split[i])/100)
-        data_split[i] = data_split[i][distSuppr:]
+    """ Supprime les premiers éléments de chaque mesures et les derniers éléments de chaque mesures
+    """
+    for boisson in data_split:
+        boisson.pop(0)
+        boisson.pop(-1)
     return data_split
 
 # Récupère le PPM
 def ppm(data_split):
-    R0 = 400e3
+    R0 = 380e3
     R_bias = 100e3
-    Vint_max = 3.3
-    ppm_min = 1
-    ppm_max = 300
-    ppm = np.linspace(ppm_min, ppm_max,100)
-    RS = R0*((ppm**(-0.632))*10**0.1090)
-    Rs_max = RS[-1]
-    V_ref = Vint_max/(1+R_bias/Rs_max)
+    Vint_min = 0.314
+    ppm_min = 1.2
+    
+    #ppm = np.linspace(ppm_min, ppm_max,100)
+    Rs_min = R0*((ppm_min**(-0.632))*10**0.1090)
+    V_ref = Vint_min/(1+R_bias/Rs_min)
     A = -0.632
     B = 0.1090
 
@@ -88,8 +89,9 @@ def callibration(data_split, Jup):
 # Classifier: trouver à quelle type de boisson BoisonAClassifier est la plus proche.
 
 # Dataset connu: Jupiler , Taras Boulba , Maes Radler , Leffe Blonde , Grimbergen Triple , Rochefort 10
-data_ref = np.loadtxt("datas/dataRef.log")
-reponses = ["Jupiler", "Taras Boulba", "Maes Radler", "Leffe Blonde", "Grimbergen Triple", "Rochefort 10", "Eau","Vadka"]
+data_ref = np.loadtxt("datas/putty.log")
+#reponses = ["Jupiler", "Taras Boulba", "Maes Radler", "Leffe Blonde", "Grimbergen Triple", "Rochefort 10", "Eau","Vodka"]
+reponses = ["Jupiler","Maes Radler"]
 data_ref = sep(data_ref, motSep)
 data_ref = delDat(data_ref, lenght)
 data_ref = suppr(data_ref)
@@ -99,7 +101,7 @@ data_ref = callibration(data_ref, Jup)
 #print("Callibration :",data_ref)
 
 # Boissons à classifier:
-BoisonsAClassifier = np.loadtxt("datas/data3.log")
+BoisonsAClassifier = np.loadtxt("datas/putty.log")
 BoisonsAClassifier = sep(BoisonsAClassifier, motSep)
 BoisonsAClassifier = delDat(BoisonsAClassifier, lenght)
 BoisonsAClassifier = suppr(BoisonsAClassifier)
@@ -130,19 +132,16 @@ def plot_polynomial(poly, ax, label=None):
     ax.plot(x, y, label=label)
 
 # Récupération des coéficients des courbes de ppm des boissons connues
-degree = 4  # Degré du polynôme
+degree = 1  # Degré du polynôme
 X_train = fit_polynomial(data_ref, degree=degree)
+#X_train = data_ref
 
 # Générer les étiquettes correspondantes, chaque boisson a un identifiant unique
 y_train = reponses
 
-# Affichage des courbes de ppm des boissons connues
-fig, ax = plt.subplots()
-for i, poly in enumerate(X_train):
-    plot_polynomial(Polynomial(poly), ax, label=reponses[i])
-ax.set_xlabel("Temps")
-ax.set_ylabel("PPM")
-ax.legend()
+# Affichage des courbes de ppm des boissons connues, les données sont dans X_train
+plt.plot(data_ref[0], label="Jupiler")
+plt.plot(data_ref[1], label="Maes Radler")
 plt.title("Courbes de ppm des boissons connues")
 plt.show()
 
@@ -158,6 +157,7 @@ knn.fit(X_train_scaled, y_train)
 
 # Prédiction
 X_test = fit_polynomial(BoisonsAClassifier, degree=degree)
+#X_test = BoisonsAClassifier
 X_test_scaled = scaler.transform(X_test)
 predictions = knn.predict(X_test_scaled)
 
@@ -178,11 +178,7 @@ for i, prediction in enumerate(predictions):
 np.savetxt("datas/results.txt", predictions, fmt="%s")
 
 # Affichage des courbes de ppm des boissons à classifier
-fig, ax = plt.subplots()
-for i, poly in enumerate(X_test):
-    plot_polynomial(Polynomial(poly), ax, label=f"Boisson {predictions[i]}")
-ax.set_xlabel("Temps")
-ax.set_ylabel("PPM")
-ax.legend()
+plt.plot(BoisonsAClassifier[0], label="Boisson 1")
+plt.plot(BoisonsAClassifier[1], label="Boisson 2")
 plt.title("Courbes de ppm des boissons à classifier")
 plt.show()
