@@ -161,6 +161,9 @@ print("Résultats de la classification :")
 for i, prediction in enumerate(predictions):
     print(f"Boisson {i + 1} : {prediction}")
 
+# Enregistre les résultats dans un fichier
+np.savetxt("datas/results.txt", predictions, fmt="%s")
+
 # Affichage des courbes de ppm des boissons à classifier
 fig, ax = plt.subplots()
 for i, poly in enumerate(X_test):
