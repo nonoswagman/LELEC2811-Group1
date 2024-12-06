@@ -5,12 +5,25 @@ from sklearn.preprocessing import StandardScaler
 from numpy.polynomial.polynomial import Polynomial
 
 # Séparateur des données
+start = "Press 'R' to read the data"
 motSep = 0.000000
 lenght = 0
 
 ###############
 # Fonctions
 ###############
+
+# Supprime les données avant la ligne "Press 'R' to read the data"
+def delData(data):
+    """ Supprime les données avant la ligne "Press 'R' to read the data"
+    """
+    toret = []
+    for tension in data:
+        if tension == start:
+            toret = []
+        else:
+            toret.append(tension)
+    return toret
 
 # Split en fonction du mot délimitateur
 def sep(data, motSep):
@@ -22,10 +35,10 @@ def sep(data, motSep):
         if tension != motSep:
             temp.append(tension)
         else:
-            if len(temp)!= 0:
+            if len(temp)>200:
                 toret.append(temp)
                 temp = []
-    if len(temp)!= 0:
+    if len(temp)>200:
         toret.append(temp)
     return toret
 
@@ -82,6 +95,15 @@ def callibration(data_split, Jup):
                 boisson[i] = 0 # Pas sû normalisé, on met 0
     return data_split
 
+def printData(data, labels, title):
+    plt.plot(data[0], label=labels[0])
+    plt.plot(data[1], label=labels[1])
+    plt.plot(data[2], label=labels[2])
+    plt.plot(data[3], label=labels[3])
+    plt.legend()
+    plt.title(title)
+    plt.show()
+
 
 ##############################
 # Classification
@@ -89,23 +111,30 @@ def callibration(data_split, Jup):
 # Classifier: trouver à quelle type de boisson BoisonAClassifier est la plus proche.
 
 # Dataset connu: Jupiler , Taras Boulba , Maes Radler , Leffe Blonde , Grimbergen Triple , Rochefort 10
-data_ref = np.loadtxt("datas/putty.log")
+# On a 4 mesures pour chaque boisson, prend la 4 eme colonne de chaque mesure
+data_ref = np.loadtxt("datas/ju_grim_roch_t1.log",usecols=3)
+data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t2.log",usecols=3)), axis=0)
+data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t3.log",usecols=3)), axis=0)
+data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t1.log",usecols=3)), axis=0)
+
 #reponses = ["Jupiler", "Taras Boulba", "Maes Radler", "Leffe Blonde", "Grimbergen Triple", "Rochefort 10", "Eau","Vodka"]
-reponses = ["Jupiler","Maes Radler"]
+reponses = ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler","Jupiler","Grimbergen Triple","Rochefort 10","Jupiler","Jupiler","Grimbergen Triple","Rochefort 10","Jupiler","Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"]
 data_ref = sep(data_ref, motSep)
 data_ref = delDat(data_ref, lenght)
 data_ref = suppr(data_ref)
 data_ref = ppm(data_ref)
+data_ref_sansCallibration = data_ref
 Jup = data_ref[0]
 data_ref = callibration(data_ref, Jup)
-#print("Callibration :",data_ref)
+#print("Callibration :",len(data_ref))
 
 # Boissons à classifier:
-BoisonsAClassifier = np.loadtxt("datas/putty.log")
+BoisonsAClassifier = list(np.loadtxt("datas/ju_grim_roch_t4.log",usecols=3))
 BoisonsAClassifier = sep(BoisonsAClassifier, motSep)
 BoisonsAClassifier = delDat(BoisonsAClassifier, lenght)
 BoisonsAClassifier = suppr(BoisonsAClassifier)
 BoisonsAClassifier = ppm(BoisonsAClassifier)
+BoisonsAClassifier_sansCallibration = BoisonsAClassifier
 Jup = BoisonsAClassifier[0]
 BoisonsAClassifier = callibration(BoisonsAClassifier, Jup)
 #print("Callibration :",BoisonsAClassifier)
@@ -132,18 +161,22 @@ def plot_polynomial(poly, ax, label=None):
     ax.plot(x, y, label=label)
 
 # Récupération des coéficients des courbes de ppm des boissons connues
-degree = 1  # Degré du polynôme
+degree = 3  # Degré du polynôme
 X_train = fit_polynomial(data_ref, degree=degree)
 #X_train = data_ref
 
 # Générer les étiquettes correspondantes, chaque boisson a un identifiant unique
 y_train = reponses
 
-# Affichage des courbes de ppm des boissons connues, les données sont dans X_train
-plt.plot(data_ref[0], label="Jupiler")
-plt.plot(data_ref[1], label="Maes Radler")
-plt.title("Courbes de ppm des boissons connues")
-plt.show()
+# Affichage des courbes de ppm des boissons connues, les données sont dans X_train (Jupiler, Grimbergen Triple, Rochefort 10)
+printData(data_ref_sansCallibration[0:4], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
+
+printData(data_ref_sansCallibration[4:8], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T2")
+
+printData(data_ref_sansCallibration[8:12], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons à classifier")
+
+printData(data_ref_sansCallibration[12:16], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons à classifier")
+
 
 
 # Mise à l'échelle pour éviter des biais liés aux différentes échelles des coefficients
@@ -157,7 +190,6 @@ knn.fit(X_train_scaled, y_train)
 
 # Prédiction
 X_test = fit_polynomial(BoisonsAClassifier, degree=degree)
-#X_test = BoisonsAClassifier
 X_test_scaled = scaler.transform(X_test)
 predictions = knn.predict(X_test_scaled)
 
@@ -170,15 +202,7 @@ uncertain_predictions = predictions_proba.max(axis=1) < threshold
 predictions[uncertain_predictions] = -1  # -1 signifie une prédiction incertain
 
 # Résultats, shoud be Jupiler, Taras Boulba, Maes Radler, Leffe Blonde, Grimbergen Triple, Rochefort 10
-print("Résultats de la classification :")
-for i, prediction in enumerate(predictions):
-    print(f"Boisson {i + 1} : {prediction}")
+printData(BoisonsAClassifier_sansCallibration, predictions, f"Résultats de la classification: {predictions}")
 
 # Enregistre les résultats dans un fichier
 np.savetxt("datas/results.txt", predictions, fmt="%s")
-
-# Affichage des courbes de ppm des boissons à classifier
-plt.plot(BoisonsAClassifier[0], label="Boisson 1")
-plt.plot(BoisonsAClassifier[1], label="Boisson 2")
-plt.title("Courbes de ppm des boissons à classifier")
-plt.show()
