@@ -123,7 +123,7 @@ data_ref = sep(data_ref, motSep)
 data_ref = delDat(data_ref, lenght)
 data_ref = suppr(data_ref)
 data_ref = ppm(data_ref)
-data_ref_sansCallibration = data_ref
+data_ref_sansCallibration = data_ref.copy()
 Jup = data_ref[0]
 data_ref = callibration(data_ref, Jup)
 #print("Callibration :",len(data_ref))
@@ -134,7 +134,7 @@ BoisonsAClassifier = sep(BoisonsAClassifier, motSep)
 BoisonsAClassifier = delDat(BoisonsAClassifier, lenght)
 BoisonsAClassifier = suppr(BoisonsAClassifier)
 BoisonsAClassifier = ppm(BoisonsAClassifier)
-BoisonsAClassifier_sansCallibration = BoisonsAClassifier
+BoisonsAClassifier_sansCallibration = BoisonsAClassifier.copy()
 Jup = BoisonsAClassifier[0]
 BoisonsAClassifier = callibration(BoisonsAClassifier, Jup)
 #print("Callibration :",BoisonsAClassifier)
@@ -184,7 +184,7 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 
 # Modèle k-NN
-k = 1
+k = 2
 knn = KNeighborsClassifier(n_neighbors=k)
 knn.fit(X_train_scaled, y_train)
 
