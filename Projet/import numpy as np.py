@@ -4,7 +4,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from numpy.polynomial.polynomial import Polynomial
 from scipy.signal import butter, lfilter, freqz, freqs,sosfilt
-from scipy.optimize import curve_fit
 
 # Séparateur des données
 start = "Press 'R' to read the data"
@@ -14,15 +13,6 @@ lenght = 0
 ###############
 # Fonctions
 ###############
-def printData(data, labels, title):
-    plt.plot(data[0], label=labels[0])
-    plt.plot(data[1], label=labels[1])
-    plt.plot(data[2], label=labels[2])
-    plt.plot(data[3], label=labels[3])
-    plt.legend()
-    plt.title(title)
-    plt.savefig("normal.pdf")
-    plt.show()
 
 # Supprime les données avant la ligne "Press 'R' to read the data"
 def delData(data):
@@ -46,10 +36,10 @@ def sep(data, motSep):
         if tension != motSep:
             temp.append(tension)
         else:
-            if len(temp)>150:
+            if len(temp)>200:
                 toret.append(temp)
                 temp = []
-    if len(temp)>150:
+    if len(temp)>200:
         toret.append(temp)
     return toret
 
@@ -75,7 +65,7 @@ def suppr(data_split):
 # Récupère le PPM
 def ppm(data_split):
     R0 = 380e3
-    R_bias = 20e3
+    R_bias = 100e3
     Vint_min = 0.314
     ppm_min = 1.2
     
@@ -84,14 +74,13 @@ def ppm(data_split):
     V_ref = Vint_min/(1+R_bias/Rs_min)
     A = -0.632
     B = 0.1090
-    f = 10**(-B/A)
 
     for boisson in data_split:
         for j in range(len(boisson)):
             Rs = R_bias / ( boisson[j]/V_ref -1)
             base = Rs / (R0 * 10**B)
             if base > 0:
-                boisson[j] = (Rs/R0)**A*f
+                boisson[j] = (Rs / (R0 * 10**B))**(1/A)
             else:
                 boisson[j] = -1
                 #print("Invalid base:", base, ( boisson[j]/V_ref -1))
@@ -116,60 +105,20 @@ def callibration(data_split, Jup):
 
 # Dataset connu: Jupiler , Taras Boulba , Maes Radler , Leffe Blonde , Grimbergen Triple , Rochefort 10
 # On a 4 mesures pour chaque boisson, prend la 4 eme colonne de chaque mesure
-data_test = np.loadtxt("datas/test.log",usecols=3)
 data_ref = np.loadtxt("datas/ju_grim_roch_t1.log",usecols=3)
 data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t2.log",usecols=3)), axis=0)
 data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t3.log",usecols=3)), axis=0)
-data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t4.log",usecols=3)), axis=0)
-data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t5.log",usecols=3)), axis=0)
-data_ref = np.concatenate((data_ref, np.loadtxt("datas/2_T1.log",usecols=3)), axis=0)
-data_ref = np.concatenate((data_ref, np.loadtxt("datas/2_T2.log",usecols=3)), axis=0)
-data_ref = np.concatenate((data_ref, np.loadtxt("datas/2_T3.log",usecols=3)), axis=0)
-data_ref = np.concatenate((data_ref, np.loadtxt("datas/2_T4.log",usecols=3)), axis=0)
-data_ref = np.concatenate((data_ref, np.loadtxt("datas/2_T5.log",usecols=3)), axis=0)
+data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t1.log",usecols=3)), axis=0)
 
 #reponses = ["Jupiler", "Taras Boulba", "Maes Radler", "Leffe Blonde", "Grimbergen Triple", "Rochefort 10", "Eau","Vodka"]
-reponses = ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler",\
-            "Jupiler","Grimbergen Triple","Rochefort 10","Jupiler",\
-                "Jupiler","Grimbergen Triple","Rochefort 10","Jupiler",\
-                    "Jupiler","Grimbergen Triple","Rochefort 10","Jupiler",\
-                        "Jupiler","Grimbergen Triple","Rochefort 10","Jupiler",\
-                            "Radler", "Bulba", "Leffe",\
-                                "Radler", "Bulba", "Leffe", "Leffe",\
-                                    "Radler", "Bulba", "Leffe",\
-                                            "Radler", "Bulba", "Leffe", "Leffe",\
-                                                "Radler", "Bulba", "Leffe"]
-
-
-
-reponses_r = [ 5.2, 9, 11.3, 5.2,\
-              5.2, 9, 11.3, 5.2,\
-              5.2, 9, 11.3, 5.2,\
-              5.2, 9, 11.3, 5.2,\
-              5.2, 9, 11.3, 5.2,\
-              2.0, 4.5, 6.6,\
-              2.0, 4.5, 6.6, 6.6,\
-              2.0, 4.5, 6.6,\
-              2.0, 4.5, 6.6, 6.6,\
-              2.0, 4.5, 6.6]
-
-reponse_t = [4.5,2,4.5,6.6]
-
-print(len(reponses_r), len(data_ref))
+reponses = ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler","Jupiler","Grimbergen Triple","Rochefort 10","Jupiler","Jupiler","Grimbergen Triple","Rochefort 10","Jupiler","Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"]
 data_ref = sep(data_ref, motSep)
-data_test = sep(data_test, motSep)
-print(f"len data_ref {len(data_ref)}")
 data_ref = delDat(data_ref, lenght)
 data_ref = suppr(data_ref)
 data_ref = ppm(data_ref)
-data_test = delDat(data_test, lenght)
-data_test = suppr(data_test)
-data_test = ppm(data_test)
-print(f"len data_ref {len(data_ref)}")
 data_ref_sansCallibration = data_ref.copy()
 Jup = data_ref[0]
 data_ref = callibration(data_ref, Jup)
-data_test = callibration(data_test, Jup)
 #print("Callibration :",len(data_ref))
 
 # Boissons à classifier:
@@ -193,60 +142,8 @@ def fit_polynomial(boissons, degree=3):
     for boisson in boissons:
         if len(boisson) > 0:
             poly = Polynomial.fit(range(len(boisson)), boisson, degree)
-            x = np.arange(0, 100, 1)
-            y = poly(x)
-            plt.plot(poly(x))
-            plt.plot(boisson)
-            plt.show()
             X.append(poly.coef)
     return np.array(X)
-
-def fit_log_w(boissons):
-    """
-    Ajuste un polynôme à chaque série de données ppm.
-    Retourne les coefficients des polynômes pour chaque boisson.
-    """
-    X = []
-    for boisson in boissons:
-        if len(boisson) > 100:
-            poly = np.array(fit_log(boisson))
-            a = np.quantile(boisson, 0.90)
-            print(a)
-            r = np.array([poly[0], poly[1], poly[2],poly[3],a])
-            X.append(r)
-    return np.array(X)
-
-def fit_log(boissons):
-    """
-    Fit the first 150 elements of the "boissons" array with the function:
-    f(x) = a * log_b(c * x) + d
-
-    Parameters:
-        boissons (array-like): Input data to fit.
-
-    Returns:
-        popt (tuple): Optimized parameters (a, b, c, d).
-    """
-    def log_func(x, a, b, c, d):
-        return a * np.log(c * x) / np.log(b) + d
-
-    # Limit to the first 150 elements
-    x_data = np.arange(1, min(100, len(boissons)) + 1)  # Avoid log(0)
-    y_data = boissons[:100]
-
-    # Initial parameter guesses: a=1, b=2, c=1, d=0
-    initial_guess = [1, 5, 1, 3]
-
-    # Curve fitting
-    (a,b,c,d), _ = curve_fit(log_func, x_data, y_data, p0=initial_guess)
-
-    """absci = np.arange(0,100,1)
-    ordo = log_func(absci,a,b,c,d)
-    plt.plot(absci, boissons[:100])
-    plt.plot(absci, ordo)
-    plt.show()"""
-
-    return a,b,c,d
 
 def plot_polynomial(poly, ax, label=None):
     """
@@ -262,16 +159,14 @@ def butter_lowpass(cutoff, fs, order=100):
     sos = butter(order, normal_cutoff, btype='low', output='sos')
     return sos
 
-def butter_lowpass_filter(data, cutoff, fs, order=20):
+def butter_lowpass_filter(data, cutoff, fs, order=4):
+    print(data)
     sos = butter_lowpass(cutoff, fs, order=order)
     y = sosfilt(sos, data)
-    return y[order//2:]
+    return y
 
-def filter_loop(data, cutoff, fs, order=20):
-    res = []
-    for d in data:
-        res.append(butter_lowpass_filter(d, cutoff, fs, order=20))
-    return res
+
+
 def printData_f(data, labels, title):
     for i in range(len(data)):
         printData_2(data[i], labels[i], title)
@@ -285,21 +180,21 @@ def printData_2(data, labels, title):
     plt.show()
 
 
-data_ref = filter_loop(data_ref,1,10)
-data_test = filter_loop(data_test,1,10)
+
 # Récupération des coéficients des courbes de ppm des boissons connues
 degree = 3  # Degré du polynôme
-X_train = fit_log_w(data_ref)
-X_test = fit_log_w(data_test)
-print(X_train.shape)
+print("shape",type(data_ref[0]))
+X_train = fit_polynomial(data_ref, degree=degree)
+#X_train = data_ref
+
 # Générer les étiquettes correspondantes, chaque boisson a un identifiant unique
 y_train = reponses
 
 # Affichage des courbes de ppm des boissons connues, les données sont dans X_train (Jupiler, Grimbergen Triple, Rochefort 10)
 #printData(data_ref_sansCallibration[0:4], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
-#printData_f(data_ref[20:], reponses[20:], "Courbes de ppm des boissons connues T1")
+printData_f(data_ref_sansCallibration[0:4], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
 
-"""#printData(data_ref_sansCallibration[4:8], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T2")
+#printData(data_ref_sansCallibration[4:8], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T2")
 printData_f(data_ref_sansCallibration[4:8], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
 
 #printData(data_ref_sansCallibration[8:12], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons à classifier")
@@ -307,63 +202,10 @@ printData_f(data_ref_sansCallibration[8:12], ["Jupiler","Grimbergen Triple","Roc
 
 #printData(data_ref_sansCallibration[12:16], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons à classifier")
 printData_f(data_ref_sansCallibration[12:16], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
-"""
-from sklearn.linear_model import Ridge
-from sklearn.ensemble import RandomForestRegressor
 
 
-model = RandomForestRegressor(n_estimators=10)
 
-for i in X_train:
-    print(i.shape)
-model.fit(X_train, reponses_r)
-result = (model.predict(X_train))
-
-def RMSE(x,y):
-    diff = (x-y)**2
-    return (np.sum(diff)/len(x))**0.5
-print("RMSE",RMSE(result, reponses_r))
-
-plt.scatter(reponses_r, result, color="orange")
-
-xx = np.linspace(2,12,1000)
-plt.plot(xx,xx)
-plt.show()
-
-result_test = (model.predict(X_test))
-print(f"RMSE test {RMSE(result_test, reponse_t)}")
-print(reponse_t)
-print(result_test)
-
-
-from sklearn.ensemble import RandomForestClassifier
-
-
-model = RandomForestClassifier(n_estimators=10)
-
-for i in X_train:
-    print(i.shape)
-model.fit(X_train, reponses)
-result = (model.predict(X_train))
-
-def RMSE(x,y):
-    diff = (x-y)**2
-    return (np.sum(diff)/len(x))**0.5
-print(result)
-print(reponses)
-
-plt.scatter(reponses, result, color="orange")
-
-xx = np.linspace(2,12,1000)
-plt.plot(xx,xx)
-plt.show()
-
-result_test = (model.predict(X_test))
-print(result_test)
-print(["bulba", "radler", "bulba", "leffe"])
-
-
-"""# Mise à l'échelle pour éviter des biais liés aux différentes échelles des coefficients
+# Mise à l'échelle pour éviter des biais liés aux différentes échelles des coefficients
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 
@@ -390,4 +232,3 @@ printData(BoisonsAClassifier_sansCallibration, predictions, f"Résultats de la c
 
 # Enregistre les résultats dans un fichier
 np.savetxt("datas/results.txt", predictions, fmt="%s")
-"""
