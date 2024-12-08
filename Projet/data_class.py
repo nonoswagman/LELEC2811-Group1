@@ -97,14 +97,48 @@ def ppm(data_split):
                 #print("Invalid base:", base, ( boisson[j]/V_ref -1))
     return data_split
 
-# Callibration des datas en fonction de la jupilère: Tous les ppm = ppm-ppm_JUP
-def callibration(data_split, Jup):
+# Callibration des datas en fonction de la jupilèr: Tous les ppm au temps i = ppm-i-ppm_JUP_i
+def calibration_ref(data_split, Jup):
+    for j,boisson in enumerate(data_split):
+            if j<4 or (j>=20 and j<23) :#T1 mesure 1 et 2
+                for i in range(len(boisson)):
+                    if(i<len(Jup[0])):
+                        boisson[i] = boisson[i]-Jup[0][i]
+                    else:
+                        boisson[i] = 0 # Pas sû normalisé, on met 0
+            if (j>=4 and j<8) or (j>=23 and j<27):#T2 mesure 1 et 2
+                for i in range(len(boisson)):
+                    if(i<len(Jup[1])):
+                        boisson[i] = boisson[i]-Jup[1][i]
+                    else:
+                        boisson[i] = 0 # Pas sû normalisé, on met 0
+            if (j>=8 and j<12)or (j>=27 and j<30):#T3 mesure 1 et 2
+                for i in range(len(boisson)):
+                    if(i<len(Jup[2])):
+                        boisson[i] = boisson[i]-Jup[2][i]
+                    else:
+                        boisson[i] = 0 # Pas sû normalisé, on met 0
+            if (j>=12 and j<16)or (j>=30 and j<34):#T4 mesure 1 et 2
+                for i in range(len(boisson)):
+                    if(i<len(Jup[3])):
+                        boisson[i] = boisson[i]-Jup[3][i]
+                    else:
+                        boisson[i] = 0 # Pas sû normalisé, on met 0
+            if (j>=16 and j<20) or (j>=34 and j<37):#T5 mesure 1 et2
+                for i in range(len(boisson)):
+                    if(i<len(Jup[4])):
+                        boisson[i] = boisson[i]-Jup[4][i]
+                    else:
+                        boisson[i] = 0 # Pas sû normalisé, on met 0
+    return data_split
+
+def calibration_test(data_split, Jup):
     for boisson in data_split:
-        for i in range(len(boisson)):
-            if(i<len(Jup)):
-                boisson[i] = boisson[i]-Jup[i]
-            else:
-                boisson[i] = 0 # Pas sû normalisé, on met 0
+            for i in range(len(boisson)):
+                if(i<len(Jup)):
+                    boisson[i] = boisson[i]-Jup[i]
+                else:
+                    boisson[i] = 0 # Pas sû normalisé, on met 0
     return data_split
 
 
@@ -116,6 +150,7 @@ def callibration(data_split, Jup):
 
 # Dataset connu: Jupiler , Taras Boulba , Maes Radler , Leffe Blonde , Grimbergen Triple , Rochefort 10
 # On a 4 mesures pour chaque boisson, prend la 4 eme colonne de chaque mesure
+
 data_test = np.loadtxt("datas/test.log",usecols=3)
 data_ref = np.loadtxt("datas/ju_grim_roch_t1.log",usecols=3)
 data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t2.log",usecols=3)), axis=0)
@@ -155,24 +190,32 @@ reponses_r = [ 5.2, 9, 11.3, 5.2,\
 
 reponse_t = [4.5,2,4.5,6.6]
 
-print(len(reponses_r), len(data_ref))
+#print(len(reponses_r), len(data_ref))
 data_ref = sep(data_ref, motSep)
 data_test = sep(data_test, motSep)
-print(f"len data_ref {len(data_ref)}")
+#print(f"len data_ref {len(data_ref)}")
 data_ref = delDat(data_ref, lenght)
 data_ref = suppr(data_ref)
 data_ref = ppm(data_ref)
 data_test = delDat(data_test, lenght)
 data_test = suppr(data_test)
 data_test = ppm(data_test)
-print(f"len data_ref {len(data_ref)}")
+#print(f"len data_ref {len(data_ref)}")
 data_ref_sansCallibration = data_ref.copy()
-Jup = data_ref[0]
-data_ref = callibration(data_ref, Jup)
-data_test = callibration(data_test, Jup)
+#####################################Creer array avec Jup T1,T2,T3,T4,T5
+Jup_ref=[]
+for i in range(5):
+    Jup_ref.append(data_ref[i*4])
+
+Jup_test=data_ref[16] #A changer par data_test_0 !!!
+
+
+data_ref = calibration_ref(data_ref, Jup_ref)
+data_test = calibration_test(data_test, Jup_test)
 #print("Callibration :",len(data_ref))
 
 # Boissons à classifier:
+"""
 BoisonsAClassifier = list(np.loadtxt("datas/ju_grim_roch_t4.log",usecols=3))
 BoisonsAClassifier = sep(BoisonsAClassifier, motSep)
 BoisonsAClassifier = delDat(BoisonsAClassifier, lenght)
@@ -181,7 +224,8 @@ BoisonsAClassifier = ppm(BoisonsAClassifier)
 BoisonsAClassifier_sansCallibration = BoisonsAClassifier.copy()
 Jup = BoisonsAClassifier[0]
 BoisonsAClassifier = callibration(BoisonsAClassifier, Jup)
-#print("Callibration :",BoisonsAClassifier)
+#print("Calibration :",BoisonsAClassifier)
+"""
 
 
 def fit_polynomial(boissons, degree=3):
@@ -211,7 +255,7 @@ def fit_log_w(boissons):
         if len(boisson) > 100:
             poly = np.array(fit_log(boisson))
             a = np.quantile(boisson, 0.90)
-            print(a)
+            #print(a)
             r = np.array([poly[0], poly[1], poly[2],poly[3],a])
             X.append(r)
     return np.array(X)
@@ -291,7 +335,7 @@ data_test = filter_loop(data_test,1,10)
 degree = 3  # Degré du polynôme
 X_train = fit_log_w(data_ref)
 X_test = fit_log_w(data_test)
-print(X_train.shape)
+#print(X_train.shape)
 # Générer les étiquettes correspondantes, chaque boisson a un identifiant unique
 y_train = reponses
 
@@ -314,8 +358,8 @@ from sklearn.ensemble import RandomForestRegressor
 
 model = RandomForestRegressor(n_estimators=10)
 
-for i in X_train:
-    print(i.shape)
+#for i in X_train:
+    #print(i.shape)
 model.fit(X_train, reponses_r)
 result = (model.predict(X_train))
 
@@ -332,25 +376,25 @@ plt.show()
 
 result_test = (model.predict(X_test))
 print(f"RMSE test {RMSE(result_test, reponse_t)}")
-print(reponse_t)
-print(result_test)
+print("Vrai pourcentage:",reponse_t)
+print("Pourcentage_estimé",result_test)
 
 
 from sklearn.ensemble import RandomForestClassifier
 
 
-model = RandomForestClassifier(n_estimators=10)
+model = RandomForestClassifier(n_estimators=5)
 
-for i in X_train:
-    print(i.shape)
+#for i in X_train:
+    #print(i.shape)
 model.fit(X_train, reponses)
 result = (model.predict(X_train))
 
 def RMSE(x,y):
     diff = (x-y)**2
     return (np.sum(diff)/len(x))**0.5
-print(result)
-print(reponses)
+#print(result)
+#print(reponses)
 
 plt.scatter(reponses, result, color="orange")
 
@@ -359,8 +403,9 @@ plt.plot(xx,xx)
 plt.show()
 
 result_test = (model.predict(X_test))
-print(result_test)
-print(["bulba", "radler", "bulba", "leffe"])
+print("Vraie bière",["bulba", "radler", "bulba", "leffe"])
+print("Bière estimée",result_test)
+
 
 
 """# Mise à l'échelle pour éviter des biais liés aux différentes échelles des coefficients
