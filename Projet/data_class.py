@@ -133,12 +133,12 @@ def calibration_ref(data_split, Jup):
     return data_split
 
 def calibration_test(data_split, Jup):
-    for boisson in data_split:
-            for i in range(len(boisson)):
+    for boisson in range(len(data_split)):
+            for i in range(len(data_split[boisson])):
                 if(i<len(Jup)):
-                    boisson[i] = boisson[i]-Jup[i]
+                    data_split[boisson][i] = data_split[boisson][i]-Jup[i]
                 else:
-                    boisson[i] = 0 # Pas sû normalisé, on met 0
+                    data_split[boisson][i] = 0 # Pas sû normalisé, on met 0
     return data_split
 
 
@@ -151,7 +151,7 @@ def calibration_test(data_split, Jup):
 # Dataset connu: Jupiler , Taras Boulba , Maes Radler , Leffe Blonde , Grimbergen Triple , Rochefort 10
 # On a 4 mesures pour chaque boisson, prend la 4 eme colonne de chaque mesure
 
-data_test = np.loadtxt("datas/test.log",usecols=3)
+data_test = np.loadtxt("datas/contest.log")
 data_ref = np.loadtxt("datas/ju_grim_roch_t1.log",usecols=3)
 data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t2.log",usecols=3)), axis=0)
 data_ref = np.concatenate((data_ref, np.loadtxt("datas/ju_grim_roch_t3.log",usecols=3)), axis=0)
@@ -200,6 +200,9 @@ data_ref = ppm(data_ref)
 data_test = delDat(data_test, lenght)
 data_test = suppr(data_test)
 data_test = ppm(data_test)
+
+plt.plot(np.concatenate(data_test))
+plt.show()
 #print(f"len data_ref {len(data_ref)}")
 data_ref_sansCallibration = data_ref.copy()
 #####################################Creer array avec Jup T1,T2,T3,T4,T5
@@ -207,11 +210,14 @@ Jup_ref=[]
 for i in range(5):
     Jup_ref.append(data_ref[i*4])
 
-Jup_test=data_ref[16] #A changer par data_test_0 !!!
+Jup_test=data_test[6] #A changer par data_test_0 !!!
 
-
+print(len(data_test))
 data_ref = calibration_ref(data_ref, Jup_ref)
 data_test = calibration_test(data_test, Jup_test)
+
+plt.plot(np.concatenate(data_test))
+plt.show()
 #print("Callibration :",len(data_ref))
 
 # Boissons à classifier:
@@ -253,10 +259,10 @@ def fit_log_w(boissons):
     X = []
     for boisson in boissons:
         if len(boisson) > 100:
-            poly = np.array(fit_log(boisson))
+            #poly = np.array(fit_log(boisson))
             a = np.quantile(boisson, 0.90)
             #print(a)
-            r = np.array([poly[0], poly[1], poly[2],poly[3],a])
+            r = np.array([0, 0, 0,0,a])
             X.append(r)
     return np.array(X)
 
@@ -331,6 +337,9 @@ def printData_2(data, labels, title):
 
 data_ref = filter_loop(data_ref,1,10)
 data_test = filter_loop(data_test,1,10)
+
+plt.plot(np.concatenate(data_test))
+plt.show()
 # Récupération des coéficients des courbes de ppm des boissons connues
 degree = 3  # Degré du polynôme
 X_train = fit_log_w(data_ref)
@@ -373,9 +382,10 @@ plt.scatter(reponses_r, result, color="orange")
 xx = np.linspace(2,12,1000)
 plt.plot(xx,xx)
 plt.show()
-
+plt.plot(X_test[:,4])
+plt.show()
 result_test = (model.predict(X_test))
-print(f"RMSE test {RMSE(result_test, reponse_t)}")
+#print(f"RMSE test {RMSE(result_test, reponse_t)}")
 print("Vrai pourcentage:",reponse_t)
 print("Pourcentage_estimé",result_test)
 
@@ -403,6 +413,15 @@ plt.plot(xx,xx)
 plt.show()
 
 result_test = (model.predict(X_test))
+
+# If d>3.2 it's vodka, if d<0.55 it's a soft
+for i in range(len(X_test)):
+    print(X_test[i])
+    if X_test[i][4] > 35:
+        result_test[i] = "Vodka"
+    elif X_test[i][4] < 5:
+        result_test[i] = "Soft"
+
 print("Vraie bière",["bulba", "radler", "bulba", "leffe"])
 print("Bière estimée",result_test)
 
