@@ -190,10 +190,8 @@ reponses_r = [ 5.2, 9, 11.3, 5.2,\
 
 reponse_t = [4.5,2,4.5,6.6]
 
-#print(len(reponses_r), len(data_ref))
 data_ref = sep(data_ref, motSep)
 data_test = sep(data_test, motSep)
-#print(f"len data_ref {len(data_ref)}")
 data_ref = delDat(data_ref, lenght)
 data_ref = suppr(data_ref)
 data_ref = ppm(data_ref)
@@ -203,35 +201,26 @@ data_test = ppm(data_test)
 
 plt.plot(np.concatenate(data_test))
 plt.show()
-#print(f"len data_ref {len(data_ref)}")
-data_ref_sansCallibration = data_ref.copy()
-#####################################Creer array avec Jup T1,T2,T3,T4,T5
-Jup_ref=[]
+
+# Récupère soft et vodka
+Vodka = []
+Soft = []
+for i in range(len(data_test)):
+    if np.mean(data_test[i]) > 35:
+        Vodka.append(i)
+    if np.mean(data_test[i]) < 4:
+        Soft.append(i)
+
+
+
+Jup_ref = []
 for i in range(5):
     Jup_ref.append(data_ref[i*4])
 
 Jup_test=data_test[6] #A changer par data_test_0 !!!
 
-print(len(data_test))
 data_ref = calibration_ref(data_ref, Jup_ref)
 data_test = calibration_test(data_test, Jup_test)
-
-plt.plot(np.concatenate(data_test))
-plt.show()
-#print("Callibration :",len(data_ref))
-
-# Boissons à classifier:
-"""
-BoisonsAClassifier = list(np.loadtxt("datas/ju_grim_roch_t4.log",usecols=3))
-BoisonsAClassifier = sep(BoisonsAClassifier, motSep)
-BoisonsAClassifier = delDat(BoisonsAClassifier, lenght)
-BoisonsAClassifier = suppr(BoisonsAClassifier)
-BoisonsAClassifier = ppm(BoisonsAClassifier)
-BoisonsAClassifier_sansCallibration = BoisonsAClassifier.copy()
-Jup = BoisonsAClassifier[0]
-BoisonsAClassifier = callibration(BoisonsAClassifier, Jup)
-#print("Calibration :",BoisonsAClassifier)
-"""
 
 
 def fit_polynomial(boissons, degree=3):
@@ -245,9 +234,6 @@ def fit_polynomial(boissons, degree=3):
             poly = Polynomial.fit(range(len(boisson)), boisson, degree)
             x = np.arange(0, 100, 1)
             y = poly(x)
-            plt.plot(poly(x))
-            plt.plot(boisson)
-            plt.show()
             X.append(poly.coef)
     return np.array(X)
 
@@ -338,37 +324,37 @@ def printData_2(data, labels, title):
 data_ref = filter_loop(data_ref,1,10)
 data_test = filter_loop(data_test,1,10)
 
-plt.plot(np.concatenate(data_test))
-plt.show()
+print(len(data_ref[0]))
+print(len(data_test[0]))
+
+# s'assurer que les données ont la même longueur
+min_len = min([len(boisson) for boisson in data_ref])
+data_ref = [boisson[:min_len] for boisson in data_ref]
+min_len = min([len(boisson) for boisson in data_test])
+data_test = [boisson[:min_len] for boisson in data_test]
+
+# prendre 1 valeur sur 2
+data_test = [boisson[::2] for boisson in data_test]
+
+for i in range(len(data_test)):
+    for j in range(3):
+        # ajoute le dernier élément 3 fois
+        value = data_test[i][-1]
+        data_test[i]=np.append(data_test[i],value)
+
+
 # Récupération des coéficients des courbes de ppm des boissons connues
-degree = 3  # Degré du polynôme
-X_train = fit_log_w(data_ref)
-X_test = fit_log_w(data_test)
-#print(X_train.shape)
-# Générer les étiquettes correspondantes, chaque boisson a un identifiant unique
+X_train = data_ref
+X_test = data_test
 y_train = reponses
 
-# Affichage des courbes de ppm des boissons connues, les données sont dans X_train (Jupiler, Grimbergen Triple, Rochefort 10)
-#printData(data_ref_sansCallibration[0:4], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
-#printData_f(data_ref[20:], reponses[20:], "Courbes de ppm des boissons connues T1")
 
-"""#printData(data_ref_sansCallibration[4:8], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T2")
-printData_f(data_ref_sansCallibration[4:8], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
-
-#printData(data_ref_sansCallibration[8:12], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons à classifier")
-printData_f(data_ref_sansCallibration[8:12], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
-
-#printData(data_ref_sansCallibration[12:16], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons à classifier")
-printData_f(data_ref_sansCallibration[12:16], ["Jupiler","Grimbergen Triple","Rochefort 10","Jupiler"], "Courbes de ppm des boissons connues T1")
-"""
 from sklearn.linear_model import Ridge
 from sklearn.ensemble import RandomForestRegressor
 
 
 model = RandomForestRegressor(n_estimators=10)
 
-#for i in X_train:
-    #print(i.shape)
 model.fit(X_train, reponses_r)
 result = (model.predict(X_train))
 
@@ -382,12 +368,12 @@ plt.scatter(reponses_r, result, color="orange")
 xx = np.linspace(2,12,1000)
 plt.plot(xx,xx)
 plt.show()
-plt.plot(X_test[:,4])
+#plt.plot(X_test[:,4])
 plt.show()
-result_test = (model.predict(X_test))
+
+result_test_pourcent = (model.predict(X_test))
+print("Pourcentage_estimé",result_test_pourcent)
 #print(f"RMSE test {RMSE(result_test, reponse_t)}")
-print("Vrai pourcentage:",reponse_t)
-print("Pourcentage_estimé",result_test)
 
 
 from sklearn.ensemble import RandomForestClassifier
@@ -395,19 +381,10 @@ from sklearn.ensemble import RandomForestClassifier
 
 model = RandomForestClassifier(n_estimators=5)
 
-#for i in X_train:
-    #print(i.shape)
 model.fit(X_train, reponses)
 result = (model.predict(X_train))
 
-def RMSE(x,y):
-    diff = (x-y)**2
-    return (np.sum(diff)/len(x))**0.5
-#print(result)
-#print(reponses)
-
 plt.scatter(reponses, result, color="orange")
-
 xx = np.linspace(2,12,1000)
 plt.plot(xx,xx)
 plt.show()
@@ -415,43 +392,31 @@ plt.show()
 result_test = (model.predict(X_test))
 
 # If d>3.2 it's vodka, if d<0.55 it's a soft
-for i in range(len(X_test)):
-    print(X_test[i])
-    if X_test[i][4] > 35:
+for i in range(len(result_test)):
+    if result_test_pourcent[i] > 3.2:
         result_test[i] = "Vodka"
-    elif X_test[i][4] < 5:
+    if result_test_pourcent[i] < 0.55:
         result_test[i] = "Soft"
 
-print("Vraie bière",["bulba", "radler", "bulba", "leffe"])
+print("Vraie bière",["Jupiler","Rochefort 10","Vodka","TaraBulba","Grimbergen","Maes","Jupiler","Soft","Leffe","Leffe","Leffe"])
 print("Bière estimée",result_test)
 
 
 
-"""# Mise à l'échelle pour éviter des biais liés aux différentes échelles des coefficients
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-
 # Modèle k-NN
 k = 2
+
+
 knn = KNeighborsClassifier(n_neighbors=k)
-knn.fit(X_train_scaled, y_train)
+knn.fit(X_train, y_train)
 
-# Prédiction
-X_test = fit_polynomial(BoisonsAClassifier, degree=degree)
-X_test_scaled = scaler.transform(X_test)
-predictions = knn.predict(X_test_scaled)
+result_test = knn.predict(X_test)
 
-# Donne le pourcentage de prédiction
-predictions_proba = knn.predict_proba(X_test_scaled)
+# If moyenne ppm > 3.2 it's vodka, if moyenne ppm < 0.55 it's a soft
+for index in Vodka:
+    result_test[index] = "Vodka"
+for index in Soft:
+    result_test[index] = "Soft"
 
-# Si le pourcentage de prédiction est inférieur à 0.5, il s'agit d'une prédiction incertaine
-threshold = 0.5
-uncertain_predictions = predictions_proba.max(axis=1) < threshold
-predictions[uncertain_predictions] = -1  # -1 signifie une prédiction incertain
-
-# Résultats, shoud be Jupiler, Taras Boulba, Maes Radler, Leffe Blonde, Grimbergen Triple, Rochefort 10
-printData(BoisonsAClassifier_sansCallibration, predictions, f"Résultats de la classification: {predictions}")
-
-# Enregistre les résultats dans un fichier
-np.savetxt("datas/results.txt", predictions, fmt="%s")
-"""
+print("Vraie bière",["Jupiler","Rochefort 10","Vodka","TaraBulba","Grimbergen","Maes","Jupiler","Soft","Leffe","Leffe","Leffe"])
+print("Bière estimée",result_test)
