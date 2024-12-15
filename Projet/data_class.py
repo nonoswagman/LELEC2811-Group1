@@ -200,6 +200,13 @@ data_test = suppr(data_test)
 data_test = ppm(data_test)
 
 plt.plot(np.concatenate(data_test))
+# met les noms des axes
+plt.xlabel("Time (s)")
+plt.ylabel("ppm")
+title = "Data from the contest"
+plt.title(title)
+plt.legend()
+plt.savefig(f"plots/{title}.pdf")
 plt.show()
 
 # Récupère soft et vodka
